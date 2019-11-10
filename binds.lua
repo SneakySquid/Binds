@@ -12,6 +12,7 @@ BIND_TOGGLE = 0
 BIND_HOLD = 1
 BIND_RELEASE = 2
 
+AccessorFunc(BIND, "m_sID", "ID")
 AccessorFunc(BIND, "m_iType", "Type", FORCE_NUMBER)
 AccessorFunc(BIND, "m_iButton", "Button", FORCE_NUMBER)
 AccessorFunc(BIND, "m_bEnabled", "Enabled", FORCE_BOOL)
@@ -55,8 +56,6 @@ function BIND:CheckEnabled(down)
 end
 
 local function Remove(id)
-	if (not id) then return end
-
 	local bind = _R.Binds.Identifiers[id]
 	if (not bind) then return false end
 
@@ -73,6 +72,7 @@ local function Add(id, type, button, callback)
 
 	local bind = setmetatable({}, BIND)
 
+	bind:SetID(id)
 	bind:SetType(tonumber(type) or BIND_TOGGLE)
 	bind:SetButton(tonumber(button) or KEY_NONE)
 
