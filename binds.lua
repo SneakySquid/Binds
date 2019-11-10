@@ -85,6 +85,18 @@ local function Add(id, type, button, callback)
 	return bind
 end
 
+local function Rebind(id, type, button)
+	if (not id) then return end
+
+	local bind = _R.Binds.Identifiers[id]
+	if (not bind) then return false end
+
+	bind:SetType(tonumber(type) or bind:GetType() or BIND_TOGGLE)
+	bind:SetButton(tonumber(button) or bind:GetButton() or KEY_NONE)
+
+	return true
+end
+
 local function GetTable()
 	return _R.Binds
 end
@@ -113,6 +125,7 @@ end)
 
 return {
 	Add = Add,
+	Rebind = Rebind,
 	Remove = Remove,
 	GetTable = GetTable,
 }
