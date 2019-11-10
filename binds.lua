@@ -56,6 +56,8 @@ function BIND:CheckEnabled(down)
 end
 
 local function Remove(id)
+	if (not id) then return end
+
 	local bind = _R.Binds.Identifiers[id]
 	if (not bind) then return false end
 
@@ -68,6 +70,7 @@ local function Remove(id)
 end
 
 local function Add(id, type, button, callback)
+	if (not id) then return end
 	if (_R.Binds.Identifiers[id]) then Remove(id) end
 
 	local bind = setmetatable({}, BIND)
