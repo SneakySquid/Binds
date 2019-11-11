@@ -61,8 +61,13 @@ local function Remove(id)
 	local bind = _R.Binds.Identifiers[id]
 	if (not bind) then return false end
 
-	table.RemoveByValue(_R.Binds.Buttons[bind:GetButton()], bind)
-	table.Empty(bind)
+	local binds = _R.Binds.Buttons[bind:GetButton()]
+
+	table.RemoveByValue(binds, bind)
+
+	if (#binds == 0) then
+		_R.Binds.Buttons[bind:GetButton()] = nil
+	end
 
 	setmetatable(bind, nil)
 
@@ -104,6 +109,16 @@ local function GetTable()
 	return _R.Binds
 end
 
+local function Conflicts()
+	local conflicts = {}
+
+	for button, binds in next, _R.Binds.Buttons do
+		if (#binds > 1) then conflicts[button] = table.Copy(binds) end
+	end
+
+	return conflicts
+end
+
 hook.Add("PlayerButtonDown", "Kraken.Binds.CheckDown", function(ply, button)
 	if (not IsFirstTimePredicted()) then return end
 
@@ -131,4 +146,5 @@ return {
 	Rebind = Rebind,
 	Remove = Remove,
 	GetTable = GetTable,
+	Conflicts = Conflicts,
 }
