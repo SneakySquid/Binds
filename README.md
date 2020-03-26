@@ -1,16 +1,20 @@
 # Binds!
 
-## Example:
+#### Example 1:
 ```lua
 -- Include the file yourself. Running it alone in autorun won't do anything.
 local bind = include("binds.lua")
 
--- Add a bind without the object
 bind.Add("Test 1", KEY_I, BIND_TOGGLE, function(self, enabled)
 	chat.AddText(string.format("Test bind 1 %s!", enabled and "enabled" or "disabled"))
 end)
+```
 
--- Using an object
+
+#### Example 2:
+```lua
+local bind = include("binds.lua")
+
 local TestBind2 = bind.Add("Test 2")
 TestBind2:SetType(BIND_TOGGLE) -- There's also BIND_HOLD and BIND_RELEASE
 TestBind2:SetButton(KEY_I)
@@ -19,8 +23,13 @@ TestBind2:SetEnabled(true)
 function TestBind2:OnChanged(enabled)
 	chat.AddText(string.format("Test bind 2 %s!", enabled and "enabled" or "disabled"))
 end
+```
 
--- Using a DBinder to change the bind's key
+
+#### Example 3:
+```lua
+local bind = include("binds.lua")
+
 local TestBind3 = bind.Add("Test 3", KEY_NONE, BIND_TOGGLE)
 
 function TestBind3:OnChanged(enabled)
@@ -44,11 +53,4 @@ function Binder:OnChange(key)
 
 	chat.AddText(string.format("Rebound TestBind3 to %s!", language.GetPhrase(input.GetKeyName(key)):upper()))
 end
-```
-## Output:
-```
-Rebound TestBind3 to I!
-TestBind1 enabled!
-TestBind2 disabled!
-TestBind3 enabled!
 ```
