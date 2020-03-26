@@ -16,8 +16,8 @@ end)
 local bind = include("binds.lua")
 
 local TestBind2 = bind.Add("Test 2")
-TestBind2:SetType(BIND_TOGGLE) -- There's also BIND_HOLD and BIND_RELEASE
 TestBind2:SetButton(KEY_I)
+TestBind2:SetType(BIND_TOGGLE) -- There's also BIND_HOLD and BIND_RELEASE
 TestBind2:SetEnabled(true)
 
 function TestBind2:OnChanged(enabled)
