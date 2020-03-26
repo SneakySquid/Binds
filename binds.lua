@@ -73,7 +73,7 @@ local function Remove(id)
 	return true
 end
 
-local function Add(button, type, id, callback)
+local function Add(id, button, type, callback)
 	if (not id) then return end
 	if (Identifiers[id]) then Remove(id) end
 
