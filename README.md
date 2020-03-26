@@ -49,7 +49,7 @@ function Binder:OnChange(key)
 	TestBind3:SetButton(key)
 
 	-- If you don't have the bind object you could always use 'Rebind'
-	-- bind.Rebind("Test 3", new Type [use nil or false to keep the same], new Button [use nil or false to keep the same])
+	-- bind.Rebind("Test 3", new Button [use nil or false to keep the same], new Type [use nil or false to keep the same])
 
 	chat.AddText(string.format("Rebound TestBind3 to %s!", language.GetPhrase(input.GetKeyName(key)):upper()))
 end
