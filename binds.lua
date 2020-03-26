@@ -1,9 +1,8 @@
 local _R = debug.getregistry()
+if (_R.Binds) then return _R.Binds end
 
-_R.Binds = _R.Binds or {
-	Buttons = {},
-	Identifiers = {},
-}
+local Buttons = {}
+local Identifiers = {}
 
 local BIND = {}
 BIND.__index = BIND
@@ -26,13 +25,13 @@ function BIND:OnChanged(enabled)
 end
 
 function BIND:SetButton(button)
-	_R.Binds.Buttons[button] = _R.Binds.Buttons[button] or {}
+	Buttons[button] = Buttons[button] or {}
 
 	if (self:GetButton()) then
-		table.RemoveByValue(_R.Binds.Buttons[self:GetButton()], self)
+		table.RemoveByValue(Buttons[self:GetButton()], self)
 	end
 
-	table.insert(_R.Binds.Buttons[button], self)
+	table.insert(Buttons[button], self)
 
 	self.m_iButton = button
 end
@@ -58,15 +57,15 @@ end
 local function Remove(id)
 	if (not id) then return end
 
-	local bind = _R.Binds.Identifiers[id]
+	local bind = Identifiers[id]
 	if (not bind) then return false end
 
-	local binds = _R.Binds.Buttons[bind:GetButton()]
+	local binds = Buttons[bind:GetButton()]
 
 	table.RemoveByValue(binds, bind)
 
 	if (#binds == 0) then
-		_R.Binds.Buttons[bind:GetButton()] = nil
+		Buttons[bind:GetButton()] = nil
 	end
 
 	setmetatable(bind, nil)
@@ -74,9 +73,9 @@ local function Remove(id)
 	return true
 end
 
-local function Add(id, type, button, callback)
+local function Add(button, type, id, callback)
 	if (not id) then return end
-	if (_R.Binds.Identifiers[id]) then Remove(id) end
+	if (Identifiers[id]) then Remove(id) end
 
 	local bind = setmetatable({}, BIND)
 
@@ -88,32 +87,32 @@ local function Add(id, type, button, callback)
 		bind.OnChanged = callback
 	end
 
-	_R.Binds.Identifiers[id] = bind
+	Identifiers[id] = bind
 
 	return bind
 end
 
-local function Rebind(id, type, button)
+local function Rebind(id, newType, newButton)
 	if (not id) then return end
 
-	local bind = _R.Binds.Identifiers[id]
+	local bind = Identifiers[id]
 	if (not bind) then return false end
 
-	bind:SetType(tonumber(type) or bind:GetType() or BIND_TOGGLE)
-	bind:SetButton(tonumber(button) or bind:GetButton() or KEY_NONE)
+	bind:SetType(tonumber(newType) or bind:GetType() or BIND_TOGGLE)
+	bind:SetButton(tonumber(newButton) or bind:GetButton() or KEY_NONE)
 
 	return true
 end
 
 local function GetTable()
-	return _R.Binds
+	return Binds, Identifiers
 end
 
 local function Conflicts()
 	local conflicts = {}
 
-	for button, binds in next, _R.Binds.Buttons do
-		if (#binds > 1) then conflicts[button] = table.Copy(binds) end
+	for button, binds in next, Buttons do
+		if (#binds > 1) then conflicts[button] = binds end
 	end
 
 	return conflicts
@@ -122,7 +121,7 @@ end
 hook.Add("PlayerButtonDown", "Kraken.Binds.CheckDown", function(ply, button)
 	if (not IsFirstTimePredicted()) then return end
 
-	local binds = _R.Binds.Buttons[button]
+	local binds = Buttons[button]
 	if (not binds) then return end
 
 	for _, bind in ipairs(binds) do
@@ -133,7 +132,7 @@ end)
 hook.Add("PlayerButtonUp", "Kraken.Binds.CheckUp", function(ply, button)
 	if (not IsFirstTimePredicted()) then return end
 
-	local binds = _R.Binds.Buttons[button]
+	local binds = Buttons[button]
 	if (not binds) then return end
 
 	for _, bind in ipairs(binds) do
@@ -141,10 +140,12 @@ hook.Add("PlayerButtonUp", "Kraken.Binds.CheckUp", function(ply, button)
 	end
 end)
 
-return {
+_R.Binds = {
 	Add = Add,
 	Rebind = Rebind,
 	Remove = Remove,
 	GetTable = GetTable,
 	Conflicts = Conflicts,
 }
+
+return _R.Binds
