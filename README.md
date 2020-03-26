@@ -6,8 +6,8 @@
 local bind = include("binds.lua")
 
 -- Add a bind without the object
-bind.Add("Test 1", BIND_TOGGLE, KEY_I, function(self, enabled)
-	chat.AddText(string.format("TestBind1 %s!", enabled and "enabled" or "disabled"))
+bind.Add("Test 1", KEY_I, BIND_TOGGLE, function(self, enabled)
+	chat.AddText(string.format("Test bind 1 %s!", enabled and "enabled" or "disabled"))
 end)
 
 -- Using an object
@@ -17,14 +17,14 @@ TestBind2:SetButton(KEY_I)
 TestBind2:SetEnabled(true)
 
 function TestBind2:OnChanged(enabled)
-	chat.AddText(string.format("TestBind2 %s!", enabled and "enabled" or "disabled"))
+	chat.AddText(string.format("Test bind 2 %s!", enabled and "enabled" or "disabled"))
 end
 
 -- Using a DBinder to change the bind's key
-local TestBind3 = bind.Add("Test 3", BIND_TOGGLE, KEY_NONE)
+local TestBind3 = bind.Add("Test 3", KEY_NONE, BIND_TOGGLE)
 
 function TestBind3:OnChanged(enabled)
-	chat.AddText(string.format("TestBind3 %s!", enabled and "enabled" or "disabled"))
+	chat.AddText(string.format("Test bind 3 %s!", enabled and "enabled" or "disabled"))
 end
 
 local Frame = vgui.Create("DFrame")
