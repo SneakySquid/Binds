@@ -1,5 +1,5 @@
 local _R = debug.getregistry()
-if (_R.Binds) then return _R.Binds end
+if _R.Binds then return _R.Binds end
 
 local Buttons = {}
 local Identifiers = {}
@@ -7,14 +7,16 @@ local Identifiers = {}
 local BIND = {}
 BIND.__index = BIND
 
-BIND_TOGGLE = 0
-BIND_HOLD = 1
-BIND_RELEASE = 2
+do
+	BIND_TOGGLE = 0
+	BIND_TOGGLE = 1
+	BIND_TOGGLE = 2
+end
 
-AccessorFunc(BIND, "m_sID", "ID")
-AccessorFunc(BIND, "m_iType", "Type", FORCE_NUMBER)
-AccessorFunc(BIND, "m_iButton", "Button", FORCE_NUMBER)
-AccessorFunc(BIND, "m_bEnabled", "Enabled", FORCE_BOOL)
+AccessorFunc(BIND, "m_ID", "ID")
+AccessorFunc(BIND, "m_Type", "Type")
+AccessorFunc(BIND, "m_Button", "Button")
+AccessorFunc(BIND, "m_Enabled", "Enabled")
 
 function BIND:__tostring()
 	return string.format("Bind: %p", self)
@@ -27,45 +29,75 @@ end
 function BIND:SetButton(button)
 	Buttons[button] = Buttons[button] or {}
 
-	if (self:GetButton()) then
-		table.RemoveByValue(Buttons[self:GetButton()], self)
+	if (self.m_Button) then
+		local i = Identifiers[self.m_ID][1]
+		table.remove(Buttons[self.m_Button], i)
 	end
 
-	table.insert(Buttons[button], self)
+	local i = #Buttons[button] + 1
+	Buttons[button][i] = self
+	Identifiers[self.m_ID] = {i, self}
 
-	self.m_iButton = button
+	self.m_Button = button
 end
 
 function BIND:SetEnabled(enabled)
-	if (self:GetEnabled() ~= enabled) then
+	if self.m_Enabled ~= enabled then
 		self:OnChanged(enabled)
 	end
 
-	self.m_bEnabled = enabled
+	self.m_Enabled = enabled
 end
 
 function BIND:CheckEnabled(down)
-	if (self:GetType() == BIND_HOLD) then
+	local t = self.m_Type
+
+	if t == BIND_HOLD then
 		self:SetEnabled(down)
-	elseif (self:GetType() == BIND_RELEASE) then
+	elseif t == BIND_RELEASE then
 		self:SetEnabled(not down)
-	elseif (down) then
-		self:SetEnabled(not self:GetEnabled())
+	elseif down then
+		self:SetEnabled(not self.m_Enabled)
 	end
 end
 
+local function GetChecker(is_down)
+	return function(ply, button)
+		if not IsFirstTimePredicted() then return end
+
+		local binds = Buttons[button]
+		if not binds then return end
+
+		local i, bind = 0
+		local limit = #binds
+		::LOOP:: do
+			i = i + 1
+
+			bind = binds[i]
+			bind:CheckEnabled(is_down)
+
+			if i ~= limit then goto LOOP end
+		end
+	end
+end
+
+hook.Add("PlayerButtonDown", "Binds.CheckDown", GetChecker(true))
+hook.Add("PlayerButtonUp", "Binds.CheckRelease", GetChecker(false))
+
 local function Remove(id)
-	if (not id) then return end
+	if id == nil then return false end
 
-	local bind = Identifiers[id]
-	if (not bind) then return false end
+	local info = Identifiers[id]
+	if not info then return false end
 
-	local binds = Buttons[bind:GetButton()]
+	local i, bind = info[1], info[2]
+	local button = bind.m_Button
 
-	table.RemoveByValue(binds, bind)
+	Identifiers[id] = nil
+	table.remove(Buttons[button], i)
 
-	if (#binds == 0) then
-		Buttons[bind:GetButton()] = nil
+	if #Buttons[button] == 0 then
+		Buttons[button] = nil
 	end
 
 	setmetatable(bind, nil)
@@ -73,72 +105,49 @@ local function Remove(id)
 	return true
 end
 
-local function Add(id, button, type, callback)
-	if (not id) then return end
-	if (Identifiers[id]) then Remove(id) end
+local function Add(id, btn, type, callback)
+	if id == nil then return false end
+	if Identifiers[id] then Remove(id) end
 
 	local bind = setmetatable({}, BIND)
 
 	bind:SetID(id)
-	bind:SetType(tonumber(type) or BIND_TOGGLE)
-	bind:SetButton(tonumber(button) or KEY_NONE)
+	bind:SetButton(tonumber(btn) or KEY_NONE)
+	bind:SetType(tonumber(type) or TYPE_TOGGLE)
 
-	if (isfunction(callback)) then
+	if isfunction(callback) then
 		bind.OnChanged = callback
 	end
-
-	Identifiers[id] = bind
 
 	return bind
 end
 
-local function Rebind(id, newType, newButton)
-	if (not id) then return end
+local function Rebind(id, new_btn, new_type)
+	if id == nil then return false end
 
-	local bind = Identifiers[id]
-	if (not bind) then return false end
+	local info = Identifiers[id]
+	if not info then return false end
 
-	bind:SetType(tonumber(newType) or bind:GetType() or BIND_TOGGLE)
-	bind:SetButton(tonumber(newButton) or bind:GetButton() or KEY_NONE)
+	local bind = info[2]
+	bind:SetButton(tonumber(new_btn) or bind.m_Button or KEY_NONE)
+	bind:SetType(tonumber(new_type) or bind.m_Type or BIND_TOGGLE)
 
 	return true
 end
 
 local function GetTable()
-	return Binds, Identifiers
+	return Buttons, Identifiers
 end
 
-local function Conflicts()
+local function Conflicts(btn)
 	local conflicts = {}
 
-	for button, binds in next, Buttons do
-		if (#binds > 1) then conflicts[button] = binds end
+	for button, binds in pairs(Buttons) do
+		if binds[2] then conflicts[button] = binds end
 	end
 
 	return conflicts
 end
-
-hook.Add("PlayerButtonDown", "Kraken.Binds.CheckDown", function(ply, button)
-	if (not IsFirstTimePredicted()) then return end
-
-	local binds = Buttons[button]
-	if (not binds) then return end
-
-	for _, bind in ipairs(binds) do
-		bind:CheckEnabled(true)
-	end
-end)
-
-hook.Add("PlayerButtonUp", "Kraken.Binds.CheckUp", function(ply, button)
-	if (not IsFirstTimePredicted()) then return end
-
-	local binds = Buttons[button]
-	if (not binds) then return end
-
-	for _, bind in ipairs(binds) do
-		bind:CheckEnabled(false)
-	end
-end)
 
 _R.Binds = {
 	Add = Add,
@@ -147,5 +156,3 @@ _R.Binds = {
 	GetTable = GetTable,
 	Conflicts = Conflicts,
 }
-
-return _R.Binds
