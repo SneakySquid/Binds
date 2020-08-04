@@ -156,3 +156,5 @@ _R.Binds = {
 	GetTable = GetTable,
 	Conflicts = Conflicts,
 }
+
+return _R.Binds
