@@ -9,8 +9,8 @@ BIND.__index = BIND
 
 do
 	BIND_TOGGLE = 0
-	BIND_TOGGLE = 1
-	BIND_TOGGLE = 2
+	BIND_RELEASE = 1
+	BIND_HOLD = 2
 end
 
 AccessorFunc(BIND, "m_ID", "ID")
